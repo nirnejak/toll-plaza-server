@@ -1,0 +1,27 @@
+const chalk = require("chalk")
+const express = require("express")
+const jwt = require("jsonwebtoken")
+
+const isAuthenticated = (req, res, next) => {
+  const bearerHeader = req.headers.authorization
+
+  if (typeof bearerHeader !== "undefined") {
+    const bearer = bearerHeader.split(" ")
+    const bearerToken = bearer[1]
+    req.jwtToken = bearerToken
+    jwt.verify(bearerToken, process.env.JWT_TOKEN_SECRET, (err, authData) => {
+      if (err) {
+        console.log(chalk.red.inverse(err))
+        res.sendStatus(403) // Forbidden
+      } else {
+        express.request.user = authData.user
+        req.user = authData.user
+        next()
+      }
+    })
+  } else {
+    res.sendStatus(403) // Forbidden
+  }
+}
+
+module.exports = isAuthenticated
